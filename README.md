@@ -65,6 +65,8 @@ Data is written into kdb binary chunk files:
 ## Accessing Data From Other Applications
 ### 1) Live data over q IPC (recommended)
 The running collector starts a q process on `Q_PORT` (default `5010`).
+If you use `pykx` only as an IPC client (without embedded q), set:
+`PYKX_UNLICENSED=true`.
 
 q client example:
 ```q
@@ -84,6 +86,12 @@ trade_count = q("count .ingest.trades").py()
 last_trades = q("5#select from .ingest.trades where sym=`BTCUSDT").py()
 top5_l2 = q("10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5").py()
 q.close()
+```
+
+Shell example:
+```bash
+export PYKX_UNLICENSED=true
+python your_client.py
 ```
 
 ### 2) Historical chunks from disk (`.qbin`)

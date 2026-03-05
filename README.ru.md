@@ -65,6 +65,8 @@ export L2B_COMPRESS_ALG=2   # gzip
 ## Как подключаться к базе из других приложений
 ### 1) Live-данные через q IPC (рекомендуется)
 Во время работы коллектора поднимается q-процесс на `Q_PORT` (по умолчанию `5010`).
+Если `pykx` используется только как IPC-клиент (без embedded q), установите:
+`PYKX_UNLICENSED=true`.
 
 Пример на q:
 ```q
@@ -84,6 +86,12 @@ trade_count = q("count .ingest.trades").py()
 last_trades = q("5#select from .ingest.trades where sym=`BTCUSDT").py()
 top5_l2 = q("10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5").py()
 q.close()
+```
+
+Пример запуска из shell:
+```bash
+export PYKX_UNLICENSED=true
+python your_client.py
 ```
 
 ### 2) Исторические чанки с диска (`.qbin`)
