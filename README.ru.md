@@ -62,6 +62,52 @@ export L2B_COMPRESS_ALG=2   # gzip
 - `/home/rut/l2b_kdb_db/trades/YYYY.MM.DD/*.qbin`
 - `/home/rut/l2b_kdb_db/l2/YYYY.MM.DD/*.qbin`
 
+## Как подключаться к базе из других приложений
+### 1) Live-данные через q IPC (рекомендуется)
+Во время работы коллектора поднимается q-процесс на `Q_PORT` (по умолчанию `5010`).
+
+Пример на q:
+```q
+h:hopen `:localhost:5010;
+h"count .ingest.trades";
+h"5#select from .ingest.trades where sym=`BTCUSDT";
+h"10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5";
+hclose h;
+```
+
+Пример на Python (PyKX):
+```python
+import pykx as kx
+
+q = kx.QConnection("localhost", 5010)
+trade_count = q("count .ingest.trades").py()
+last_trades = q("5#select from .ingest.trades where sym=`BTCUSDT").py()
+top5_l2 = q("10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5").py()
+q.close()
+```
+
+### 2) Исторические чанки с диска (`.qbin`)
+Читать чанки можно через то же q IPC-соединение:
+
+```python
+import glob
+import pykx as kx
+
+q = kx.QConnection("localhost", 5010)
+paths = sorted(glob.glob("/home/rut/l2b_kdb_db/trades/2026.03.05/*.qbin"))
+
+for p in paths[:3]:
+    rows = q(f'count get `$":{p}"').py()
+    print(p, rows)
+
+sample = q(f'2#select sym,px,qty from get `$":{paths[-1]}"').py()
+q.close()
+```
+
+Схема таблиц:
+- `trades`: `ts, window_ts, sym, trade_id, px, qty, is_bm, evt_ts`
+- `l2`: `ts, window_ts, sym, side, lvl, px, qty, evt_ts`
+
 ## Проверка работы
 1. Заполните `coinz.csv`.
 2. Запустите `./run.sh`.

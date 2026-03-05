@@ -62,6 +62,52 @@ Data is written into kdb binary chunk files:
 - `/home/rut/l2b_kdb_db/trades/YYYY.MM.DD/*.qbin`
 - `/home/rut/l2b_kdb_db/l2/YYYY.MM.DD/*.qbin`
 
+## Accessing Data From Other Applications
+### 1) Live data over q IPC (recommended)
+The running collector starts a q process on `Q_PORT` (default `5010`).
+
+q client example:
+```q
+h:hopen `:localhost:5010;
+h"count .ingest.trades";
+h"5#select from .ingest.trades where sym=`BTCUSDT";
+h"10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5";
+hclose h;
+```
+
+Python (PyKX) example:
+```python
+import pykx as kx
+
+q = kx.QConnection("localhost", 5010)
+trade_count = q("count .ingest.trades").py()
+last_trades = q("5#select from .ingest.trades where sym=`BTCUSDT").py()
+top5_l2 = q("10#select from .ingest.l2 where sym=`BTCUSDT,lvl<5").py()
+q.close()
+```
+
+### 2) Historical chunks from disk (`.qbin`)
+Read chunk files through the same q IPC connection:
+
+```python
+import glob
+import pykx as kx
+
+q = kx.QConnection("localhost", 5010)
+paths = sorted(glob.glob("/home/rut/l2b_kdb_db/trades/2026.03.05/*.qbin"))
+
+for p in paths[:3]:
+    rows = q(f'count get `$":{p}"').py()
+    print(p, rows)
+
+sample = q(f'2#select sym,px,qty from get `$":{paths[-1]}"').py()
+q.close()
+```
+
+Tables schema:
+- `trades`: `ts, window_ts, sym, trade_id, px, qty, is_bm, evt_ts`
+- `l2`: `ts, window_ts, sym, side, lvl, px, qty, evt_ts`
+
 ## Health Check
 1. Put symbols into `coinz.csv`.
 2. Start with `./run.sh`.
