@@ -12,7 +12,8 @@
 
 .ingest.dbRoot:.ingest.getenv[`L2B_DB_DIR;"/home/rut/l2b_kdb_db"];
 .ingest.persistMs:.ingest.getenvLong[`L2B_PERSIST_MS;5000];
-.ingest.compressOn:.ingest.getenv[`L2B_COMPRESS;"1"] in ("1";"true";"TRUE";"yes";"on");
+.ingest.compressFlag:lower .ingest.getenv[`L2B_COMPRESS;"1"];
+.ingest.compressOn:any .ingest.compressFlag~/:("1";"true";"yes";"on");
 .ingest.compressBlockLog2:.ingest.getenvLong[`L2B_COMPRESS_BLOCKLOG2;17];
 .ingest.compressAlg:.ingest.getenvLong[`L2B_COMPRESS_ALG;3];
 .ingest.compressLevel:.ingest.getenvLong[`L2B_COMPRESS_LEVEL;0];
@@ -115,7 +116,7 @@
 
 / Periodic disk flush
 .z.ts:{.ingest.persist[]};
-\t .ingest.persistMs;
+system "t ",string .ingest.persistMs;
 
 show "L2B ingest initialized";
 show "dbRoot=",.ingest.dbRoot;
