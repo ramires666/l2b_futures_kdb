@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pykx-config
+
+# Local secrets / licenses
+.env
+*.lic
+.qhome/
+
+# Local tooling artifacts
+AGENTS.md
+
+# Local runtime paths
+q/
+data/
+logs/
